@@ -14,3 +14,7 @@ Half finished, accepting PRs
 ## Instructions
 
 Need 128GB ram for downloading/unzipping the dataset
+
+Install `py7zr`
+
+On mac its `brew install py7zr`
