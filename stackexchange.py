@@ -104,7 +104,7 @@ def download_and_process_single(name):
         name = name.strip().lower()
         os.makedirs("dumps", exist_ok=True)
         s = Stack_Exchange_Downloader(name)
-        assert set(ALL).issubset(set(s.sites.keys()))
+        # assert set(ALL).issubset(set(s.sites.keys()))
         path_to_xml = f"dumps/{name}/Posts.xml"
         if name != "stackoverflow":
             path_to_7z = f"dumps/{s.sites[name]['url']}.7z"
@@ -124,8 +124,8 @@ def download_and_process_single(name):
                         s.sites[name]["url"]
                     )
                 )
-        qa = QA_Pairer(path_to_xml, out_folder, name=name)
-        qa.main()
+        # qa = QA_Pairer(path_to_xml, out_folder, name=name)
+        # qa.main()
 
         # for f in os.listdir(f"dumps/{name}"):
         #     if f.endswith(".xml"):
@@ -133,8 +133,11 @@ def download_and_process_single(name):
     except:
         traceback.print_exc()
 
-
-# download_and_process_single("stackoverflow") # useful for testing to run this and comment the below
-cpu_no = 4 # cpu_count() - 1
-p = Pool(cpu_no)
-p.starmap(download_and_process_single, ALL)
+SMALL_TEST = True
+if __name__ == "__main__":
+  if SMALL_TEST:
+    download_and_process_single("stackoverflow") # useful for testing to run this and comment the below
+  else:
+    cpu_no = 64 # cpu_count() - 1
+    p = Pool(cpu_no)
+    p.map(download_and_process_single, ALL)
