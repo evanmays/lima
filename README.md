@@ -1,4 +1,8 @@
+# Reproduce LIMA
+
 Weekend effort to reproduce Meta's Less is More for Aligment (LIMA)
+
+Hypothesis: Tiny finetuning dataset size only worked well because of significant overlap with the pretraining dataset.
 
 I cheat by using their already published paper author prompts.
 
