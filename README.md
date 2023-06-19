@@ -10,3 +10,7 @@ Half finished, accepting PRs
 - [ ] Pushshift r/WritingPrompts
 - [ ] Natural Instructions
 - [ ] Paper Authors (Group A)
+
+## Instructions
+
+Need 128GB ram for downloading/unzipping the dataset
