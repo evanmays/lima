@@ -9,21 +9,23 @@ import xml.etree.ElementTree as etree
 from collections import defaultdict
 from tqdm import tqdm
 import numpy as np
+import openai
 
 TOKEN = "U4DMV*8nvpm3EOpvf69Rxw(("
 
 STEM = [
     "stackoverflow",  # always do first since it's the largest
-    "serverfault", "superuser", "webapps", "gaming", "webmasters", "gamedev", "stats", "math", "tex", "askubuntu",
-    "unix", "wordpress", "cstheory", "softwareengineering", "electronics", "android", "physics", "dba", "scifi",
+    "serverfault", "superuser", "webapps", "gaming", "webmasters", "gamedev", "stats", "math",
+      "tex", "askubuntu",
+    "unix", "wordpress", "cstheory", "electronics", "android", "physics", "dba", "scifi",
     "codereview", "codegolf", "quant", "drupal", "sharepoint", "sqa", "crypto", "dsp", "bitcoin", "linguistics",
-    "scicomp", "biology", "mathematica", "psychology", "cs", "chemistry", "raspberrypi", "patents", "genealogy",
+    "scicomp", "biology", "mathematica", "cs", "chemistry", "raspberrypi", "patents", "genealogy",
     "robotics", "expressionengine", "reverseengineering", "networkengineering", "opendata", "mathoverflow", "space",
-    "sound", "astronomy", "tor", "ham", "arduino", "cs50", "joomla", "datascience", "craftcms", "emacs", "economics",
-    "engineering", "civicrm", "health", "opensource", "elementaryos", "computergraphics", "hardwarerecs",
+    "sound", "astronomy", "tor", "ham", "arduino", "joomla", "datascience", "craftcms", "emacs", "economics",
+    "engineering", "civicrm", "opensource", "elementaryos", "computergraphics", "hardwarerecs",
     "3dprinting", "ethereum", "retrocomputing", "monero", "ai", "sitecore", "iot", "devops", "bioinformatics",
     "cseducators", "iota", "stellar", "conlang", "quantumcomputing", "eosio", "tezos", "drones", "materials",
-    "cardano", "proofassistants", "substrate", "bioacoustics", "solana", "languagedesign",
+    "cardano", "proofassistants", "substrate", "bioacoustics", "solana",
 ]
 
 OTHER = [
@@ -180,13 +182,7 @@ class QA_Pairer():
         self.output_buffer = []
 
     def questions_count(self):
-        count = 0
-        for event, elem in tqdm(etree.iterparse(self.xml_path, events=('end',)), desc="Parsing {} XML file".format(self.name)):
-            if elem.tag == "row":
-                attribs = defaultdict(lambda: None, elem.attrib)
-                if is_question(attribs):
-                    count += 1
-        return count
+        return sum(1 for _, elem in tqdm(etree.iterparse(self.xml_path, events=('end',)), desc="Parsing {} XML file".format(self.name)) if elem.tag == "row" and is_question(elem.attrib) or (elem.clear() and False))
     def main(self):
         """iterates through SE xmls and:
 
@@ -322,7 +318,6 @@ def download_and_process_single(name):
 
 def cnt(name):
     name = name.strip().lower()
-    s = Stack_Exchange_Downloader(name)
     # assert set(ALL).issubset(set(s.sites.keys()))
     path_to_xml = f"dumps/{name}/Posts.xml"
     qa = QA_Pairer(path_to_xml, out_folder="blahblahblah", name=name)
@@ -337,16 +332,66 @@ if __name__ == "__main__":
 #     p = Pool(cpu_no)
 #     p.map(download_and_process_single, OTHER)
 
-    sizes = Pool(47).map(cnt, OTHER)
-    r = Pool(47).map(cnt, OTHER)
+    # r = Pool(47).map(cnt, STEM)
 
     # how do we do sampling here? softmax will just push the biggest community to 1.0...
     # print(softmax(r, temperature=3.0))
 
     # this sampling does not follow the paper. not sure how they did it...
-    r = np.array(r)
-    desired_counts = list((r / r.sum() * 200).astype(np.int32))
-    ord = sorted(zip(range(len(desired_counts)), desired_counts), key=lambda item:item[1])
-    for i in range(200 - sum(desired_counts)):
-        desired_counts[ord[i % len(ord)][0]] += 1
-    print(list(zip(OTHER, desired_counts)))
+    # r = np.array(r)
+    # desired_counts = list((r / r.sum() * 200).astype(np.int32))
+    # ord = sorted(zip(range(len(desired_counts)), desired_counts), key=lambda item:item[1])
+    # for i in range(200 - sum(desired_counts)):
+    #     desired_counts[ord[i % len(ord)][0]] += 1
+    # plan = zip(STEM, desired_counts)
+    # print(list(plan))
+    # plan = [('cooking', 1), ('photo', 1), ('diy', 4), ('superuser', 29), ('gis', 9), ('money', 2), ('english', 7), ('stackapps', 1), ('ux', 1), ('apple', 7), ('rpg', 2), ('bicycles', 1), ('boardgames', 1), ('homebrew', 1), ('security', 4), ('writers', 1), ('avp', 1), ('graphicdesign', 2), ('pm', 1), ('skeptics', 1), ('fitness', 1), ('mechanics', 1), ('parenting', 1), ('music', 1), ('judaism', 2), ('german', 1), ('japanese', 1), ('philosophy', 1), ('gardening', 1), ('travel', 2), ('french', 1), ('christianity', 1), ('hermeneutics', 1), ('history', 1), ('bricks', 1), ('spanish', 1), ('movies', 1), ('chinese', 1), ('poker', 1), ('outdoors', 1), ('martialarts', 1), ('sports', 1), ('academia', 2), ('workplace', 1), ('chess', 1), ('russian', 1), ('islam', 1), ('salesforce', 7), ('politics', 1), ('anime', 1), ('magento', 6), ('ell', 6), ('sustainability', 1), ('tridion', 1), ('freelancing', 1), ('blender', 6), ('italian', 1), ('pt', 9), ('aviation', 1), ('ebooks', 1), ('beer', 1), ('softwarerecs', 1), ('expatriates', 1), ('matheducators', 1), ('earthscience', 1), ('puzzling', 1), ('buddhism', 1), ('moderators', 1), ('worldbuilding', 2), ('ja', 1), ('hsm', 1), ('lifehacks', 0), ('coffee', 0), ('vi', 0), ('musicfans', 0), ('woodworking', 0), ('ru', 26), ('rus', 1), ('mythology', 0), ('law', 1), ('portuguese', 0), ('es', 11), ('latin', 0), ('languagelearning', 0), ('crafts', 0), ('korean', 0), ('esperanto', 0), ('literature', 0), ('vegetarianism', 0), ('ukrainian', 0), ('interpersonal', 0), ('or', 0)]
+    plan = [('stackoverflow', 161), ('serverfault', 2), ('superuser', 3), ('webapps', 1), ('gaming', 1), ('webmasters', 1), ('gamedev', 1), ('stats', 1), ('math', 10), ('tex', 1), ('askubuntu', 2), ('unix', 1), ('wordpress', 1), ('cstheory', 1), ('electronics', 1), ('android', 1), ('physics', 1), ('dba', 1), ('scifi', 1), ('codereview', 1), ('codegolf', 1), ('quant', 1), ('drupal', 1), ('sharepoint', 1), ('sqa', 1), ('crypto', 1), ('dsp', 1), ('bitcoin', 0), ('linguistics', 0), ('scicomp', 0), ('biology', 0), ('mathematica', 0), ('cs', 0), ('chemistry', 0), ('raspberrypi', 0), ('patents', 0), ('genealogy', 0), ('robotics', 0), ('expressionengine', 0), ('reverseengineering', 0), ('networkengineering', 0), ('opendata', 0), ('mathoverflow', 0), ('space', 0), ('sound', 0), ('astronomy', 0), ('tor', 0), ('ham', 0), ('arduino', 0), ('joomla', 0), ('datascience', 0), ('craftcms', 0), ('emacs', 0), ('economics', 0), ('engineering', 0), ('civicrm', 0), ('opensource', 0), ('elementaryos', 0), ('computergraphics', 0), ('hardwarerecs', 0), ('3dprinting', 0), ('ethereum', 0), ('retrocomputing', 0), ('monero', 0), ('ai', 0), ('sitecore', 0), ('iot', 0), ('devops', 0), ('bioinformatics', 0), ('cseducators', 0), ('iota', 0), ('stellar', 0), ('conlang', 0), ('quantumcomputing', 0), ('eosio', 0), ('tezos', 0), ('drones', 0), ('materials', 0), ('cardano', 0), ('proofassistants', 0), ('substrate', 0), ('bioacoustics', 0), ('solana', 0)]
+    global_output = []
+    # openai.api_key = 
+    for category, desired_cnt in plan:
+        local_output = []
+        print("loading file", category)
+        with open(f"json-out/{category}.jsonl", "r") as f:
+            print("file loaded", category)
+            while len(local_output) < desired_cnt:
+                blob = f.readline()
+                def run():
+                    return openai.ChatCompletion.create(
+                        model="gpt-3.5-turbo",
+                        temperature=0.0,
+                        messages=[
+                            {"role": "system", "content": "You are a helpful assistant."},
+                            {"role": "user", "content": blob+"\n\nDo not consider the title or description. Is the answer written in first person? Respond with the word \"yes\" or the word \"no\""},
+                        ]
+                    )
+                try:
+                    print("attempt1")
+                    completion = run()
+                except:
+                    try:
+                        print("attempt2")
+                        completion = run()
+                    except:
+                        print("attempt3")
+                        try:
+                            completion = run()
+                        except openai.error.RateLimitError as e:
+                            from time import sleep
+                            print("sleeping 60 seconds since we hit rate limit error")
+                            sleep(60)
+                            try:
+                                print("attempt4")
+                                completion = run()
+                            except:
+                                print("attempt5")
+                                completion = run()
+                if 'no' in completion['choices'][0]['message']['content'].lower():
+                    local_output.append(blob)
+                    print(blob)
+                    print("global status pos", len(global_output) + len(local_output))
+                else:
+                    print("written in first person so skipped", completion['choices'][0]['message']['content'].lower())
+        global_output += local_output
+    with open(f"stem.jsonl", "w") as f:
+        f.write("".join(global_output))
