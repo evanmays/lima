@@ -1,19 +1,22 @@
 # Reproduce LIMA
 
-Weekend effort to reproduce Meta's Less is More for Aligment (LIMA)
+a smol effort to reproduce Meta's Less is More for Aligment (LIMA)
 
 Hypothesis: Tiny finetuning dataset size only worked well because of significant overlap with the pretraining dataset.
 
-I cheat by using their already published paper author prompts.
+## Data
 
-Half finished, accepting PRs
+After manual analysis of the published dataset and cross referencing with stack exchange and r/WritingPrompts, it's clear most of the selected prompts fall outside of the top 1% in upvoted reddit submissions and stack exchange questions. My best guess is Meta used random sampling with a very small filter to filter out submissions/questions with tiny scores. Then, manually reviewed and selected their prompts.
 
-- [ ] Stack Exchange (STEM)
-- [ ] Stack Exchange (Other)
-- [ ] wikiHow
-- [ ] Pushshift r/WritingPrompts
-- [ ] Natural Instructions
-- [ ] Paper Authors (Group A)
+The LIMA paper reads like they just take the highest upvoted questions/submissions that look useful, but I guess this isn't too surprising that they go down to scores in the single digits because that's where the diversity is.
+
+## Training
+
+todo
+
+## Evaluation
+
+todo
 
 ## Instructions
 
@@ -32,3 +35,5 @@ Manual filtering rules (done "manually" by gpt3.5)
 You should end up with 400 QA pairs from stack exchange. This takes me about 2 hours.
 
 Then i run the script `python3 compare.py stackexchange` which tells me there's 20% overlap with my dataset versus the version that the LIMA team published.
+
+Pushshift (reddit data source for LIMA) is no longer online. Their data is hosted by [the eye](https://the-eye.eu/redarcs/).
